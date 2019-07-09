@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     c = document.getElementById('canvas');
     cc = c.getContext('2d');
 
-    const MazeSolverDemo = new Game(c.width, c.height, 25);
+    const MazeSolverDemo = new Game(c.width, c.height, 50);
 
     const startDemo = () => {
         let time = Date.now();
@@ -67,7 +67,9 @@ class Game {
     }
 
     render() {
-        cc.clearRect(0, 0, c.width, c.height);
+        // cc.clearRect(0, 0, c.width, c.height);
+        cc.fillStyle = '#000';
+        cc.fillRect(0, 0, c.width, c.height);
         this.maze.render();
         this.mazeSolver.render();
         // cc.fillStyle = "#000";
@@ -113,6 +115,7 @@ class aStar {
             }
             if (current === this.end) {
                 console.log('DONE');
+                this.finished = true;
                 return;
             }
             // remove current from open set
@@ -128,20 +131,25 @@ class aStar {
                 .includes(Object.keys(obj)[0]))
                 .map(obj => Object.values(obj)[0]);
             // debugger
-            console.log(neighbors);
+            // console.log(neighbors);
             neighbors.forEach(neighbor => {
                 if (!this.closedSet.includes(neighbor)) {
-                    let tentativeG = current.node.g + 1;
+                    const tentativeG = current.node.g + 1;
+                    let newPath = false;
                     if (this.openSet.includes(neighbor) && tentativeG < neighbor.node.g) {
                         neighbor.node.g = tentativeG;
+                        newPath = true;
                     } else {
                         neighbor.node.g = tentativeG;
                         this.openSet.push(neighbor);
+                        newPath = true;
                     }
 
-                    neighbor.node.h = heuristic(neighbor.node, this.end.node);
-                    neighbor.node.f = neighbor.node.g + neighbor.node.h;
-                    neighbor.node.parent = current.node;
+                    if (newPath) {
+                        neighbor.node.h = heuristic(neighbor.node, this.end.node);
+                        neighbor.node.f = neighbor.node.g + neighbor.node.h;
+                        neighbor.node.parent = current.node;
+                    }
                 }
             });
             this.closedSet.push(current);
@@ -150,8 +158,10 @@ class aStar {
     }
 
     render() {
-        // this.openSet.forEach(cell => cell.render('#0f0'));
-        // this.closedSet.forEach(cell => cell.render('#f00'));
+        if (!this.finished) {
+            this.openSet.forEach(cell => cell.render('#0f0'));
+            this.closedSet.forEach(cell => cell.render('#f00'));
+        }
         this.path.forEach(node => {
             // node.render();
             cc.strokeStyle = "#0f0";
@@ -274,7 +284,7 @@ class Cell {
     render(color) {
         if (color) {
             cc.fillStyle = color;
-            cc.fillRect(this.col * this.size, this.row * this.size, this.size, this.size);
+            cc.fillRect(this.col * this.size + this.size / 4, this.row * this.size + this.size / 4, this.size - this.size / 4 * 2, this.size - this.size / 4 * 2);
         } else {
 
             cc.strokeStyle = "#53A1F3";
